@@ -332,7 +332,8 @@
   .atalhos-categoria{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:-5px 0 18px}.atalho-categoria{display:flex;align-items:center;gap:7px;min-height:37px;padding:8px;border:1px solid var(--border);border-radius:7px;background:#0d1218;color:var(--text-muted);font-size:11px;text-align:left}.atalho-categoria:hover{border-color:var(--accent);color:var(--text)}.atalho-categoria.ativo{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);box-shadow:0 0 0 2px rgba(67,166,255,.08)}.atalho-categoria span{font-size:15px;width:18px;text-align:center}.label-atalhos{display:block;color:#9ba7b7;font-size:11px;font-weight:700;margin:0 0 9px}
   .card-imagem{height:92px;margin:2px auto 14px;display:grid;place-items:center;color:var(--cor-card);position:relative;z-index:1}.card-imagem:after{content:'';position:absolute;width:90px;height:55px;border-radius:50%;background:var(--cor-card);opacity:.07;filter:blur(10px)}.card-imagem svg{width:92px;height:82px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1}.card-imagem .preenchimento{fill:currentColor;opacity:.11;stroke:none}
   .resultados-wrap .card{cursor:pointer}.card-causa-label{display:block;margin:10px 0 4px;color:var(--cor-card);font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.btn-ver-solucao{pointer-events:none}
-  .janela-detalhes{width:min(760px,calc(100% - 28px));max-height:88vh;padding:0;border:1px solid var(--border);border-radius:15px;background:#11161d;color:var(--text);box-shadow:0 35px 100px rgba(0,0,0,.7);overflow:hidden}.janela-detalhes::backdrop{background:rgba(2,5,9,.78);backdrop-…4057 tokens truncated…talhes').addEventListener('click', () => janelaDetalhes.close());
+  .janela-detalhes{width:min(760px,calc(100% - 28px));max-height:88vh;padding:0;border:1px solid var(--border);border-radius:15px;background:#11161d;color:var(--text);box-shadow:0 35px 100px rgba(0,0,0,.7);overflow:hidden}.janela-detalhes::backdrop{background:rgba(2,5,9,.78);backdrop-…4033 tokens truncated…/span>`).join('')}</div></section>` : ''}</div>`;
+    janelaDetalhes.querySelector('.fechar-detalhes').addEventListener('click', () => janelaDetalhes.close());
     janelaDetalhes.showModal();
   }
   janelaDetalhes.addEventListener('click', event => { if (event.target === janelaDetalhes) janelaDetalhes.close(); });
@@ -397,7 +398,6 @@
           </div>
           <span class="badge">${item.categoria}</span>
         </div>
-        <button class="btn-ver-solucao" type="button">Ver todas as informações</button>
         <div class="card-detalhe">
           <div class="card-detalhe-inner">
           <div class="campo">
