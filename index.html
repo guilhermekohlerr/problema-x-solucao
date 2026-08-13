@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Problema X Solução | Helpdesk</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --border: #dcdfe4;
+    --text: #1f2328;
+    --text-muted: #656d76;
+    --accent: #1a5fb4;
+    --accent-bg: #eaf1fb;
+    --tag-bg: #eef0f2;
+    --mono-bg: #f6f8fa;
+    --shadow: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-hover: 0 6px 16px rgba(0,0,0,0.08);
+  }
+  [data-tema="escuro"] {
+    --bg: #14161a;
+    --card: #1c1f26;
+    --border: #2c313b;
+    --text: #e6e8eb;
+    --text-muted: #8b93a1;
+    --accent: #5b9df9;
+    --accent-bg: #1c2b42;
+    --tag-bg: #262b34;
+    --mono-bg: #14171d;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-hover: 0 10px 24px rgba(0,0,0,0.45);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 24px;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  .topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .sub { color: var(--text-muted); font-size: 13px; margin: 0; }
+  .acoes-topo { display: flex; gap: 8px; align-items: center; }
+  button {
+    font-family: inherit;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  button:active { transform: scale(0.96); }
+  #btnTema {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  #btnTema:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+  #btnAbrirForm {
+    padding: 9px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  #btnAbrirForm:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+  .aviso {
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--accent-bg);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 16px 0;
+  }
+  #painelForm {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease, padding 0.3s ease;
+    padding: 0 18px;
+  }
+  #painelForm.aberto {
+    max-height: 1400px;
+    opacity: 1;
+    margin-bottom: 20px;
+    padding: 18px;
+  }
+  #painelForm h2 { font-size: 15px; margin: 0 0 14px; }
+  .linha-pasta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 8px;
+  }
+  #btnPasta {
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+  #btnPasta:hover { border-color: var(--accent); }
+  #statusPasta { font-size: 12.5px; color: var(--text-muted); }
+  .linha-botoes { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .btn-secundario {
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--accent);
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  .btn-secundario:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+  #listaPendentes:empty { display: none; }
+  #listaPendentes {
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .item-pendente {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--accent-bg);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+  }
+  .item-pendente-titulo { color: var(--text); font-weight: 600; }
+  .item-pendente-cat { color: var(--text-muted); }
+  .btn-remover-pendente {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 15px;
+    line-height: 1;
+    padding: 2px 4px;
+  }
+  .btn-remover-pendente:hover { color: #e05a5a; }
+  .contador-pendentes {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .link-modelo {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 0;
+    margin-top: 8px;
+    text-decoration: underline;
+  }
+  .campo-form { margin-bottom: 12px; }
+  .campo-form label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .campo-form input, .campo-form textarea, .campo-form select {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-family: inherit;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .campo-form input:focus, .campo-form textarea:focus, .campo-form select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+  .campo-form textarea { resize: vertical; min-height: 60px; }
+  .linha-2 { display: flex; gap: 12px; }
+  .linha-2 > div { flex: 1; }
+  .erro-form {
+    font-size: 12px;
+    color: #e05a5a;
+    margin: -6px 0 12px;
+    display: none;
+  }
+  .erro-form.mostrar { display: block; }
+  #btnSalvar {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+  #btnSalvar:hover { box-shadow: 0 4px 12px var(--accent-bg); }
+  .aviso-form { font-size: 12px; color: var(--text-muted); margin-top: 10px; }
+  .toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  #busca, #filtroCategoria {
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: var(--card);
+    color: var(--text);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  #busca { flex: 1; min-width: 200px; }
+  #busca:focus, #filtroCategoria:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+  #contador { color: var(--text-muted); font-size: 13px; margin-bottom: 12px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  }
+  .card:hover {
+    box-shadow: var(--shadow-hover);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .card-titulo { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+  .card-sintoma { font-size: 13px; color: var(--text-muted); margin: 0; }
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-bg);
+    padding: 3px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .card-detalhe {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.3s ease, opacity 0.25s ease, margin 0.3s ease;
+  }
+  .card.aberto .card-detalhe {
+    max-height: 1000px;
+    opacity: 1;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .card-detalhe-inner {}
+  .campo { margin-bottom: 12px; }
+  .campo-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .campo-valor { font-size: 13.5px; white-space: pre-line; line-height: 1.5; }
+  .campo-valor.mono {
+    font-family: ui-monospace, "SF Mono", Consolas, monospace;
+    background: var(--mono-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+  .tag { font-size: 11px; background: var(--tag-bg); color: var(--text-muted); padding: 3px 8px; border-radius: 4px; }
+  .vazio { text-align: center; color: var(--text-muted); padding: 40px 0; font-size: 14px; }
+  /* Template escuro ampliado */
+  :root, [data-tema="escuro"] { --bg:#0b0e14;--card:#141a22;--border:#25303d;--text:#eef5ff;--text-muted:#8995a5;--accent:#43a6ff;--accent-bg:#12273a;--tag-bg:#1d2732;--mono-bg:#0d1218;--shadow:0 10px 28px rgba(0,0,0,.18);--shadow-hover:0 18px 40px rgba(0,0,0,.32) }
+  body{padding:0;background:var(--bg)}.wrap{max-width:none}.topo{height:72px;padding:0 max(24px,calc((100% - 1200px)/2));align-items:center;position:sticky;top:0;z-index:20;background:rgba(11,14,20,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+  .topo h1{font-size:17px}.topo h1:before{content:'DS';display:inline-grid;place-items:center;width:36px;height:36px;margin-right:11px;border-radius:9px;background:linear-gradient(135deg,#238be9,#67bdff);color:#07111c;font-size:11px;font-weight:900}.sub{margin-left:50px}.acoes-topo button{background:#111820!important}.aviso{max-width:1200px;margin:28px auto 0;background:#101b27;border:1px solid #1e3348;color:#8093a7}
+  #painelForm{max-width:1200px;margin-left:auto;margin-right:auto;background:#11161d}#painelForm.aberto{margin-top:18px;margin-bottom:30px;padding:25px}.linha-pasta{background:#0d1218}.campo-form input,.campo-form textarea,.campo-form select{background:#0d1218}
+  .area-conteudo{max-width:1200px;margin:0 auto;padding:55px 0 80px}.cabecalho-busca{display:flex;justify-content:space-between;align-items:end;margin-bottom:24px}.cabecalho-busca small{display:block;color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.14em;margin-bottom:8px}.cabecalho-busca h2{font-size:34px;letter-spacing:-.04em;margin:0}.painel-pesquisa{display:grid;grid-template-columns:300px 1fr;gap:18px}.filtros-ampliados{background:#11161d;border:1px solid var(--border);border-radius:12px;padding:22px;height:max-content;position:sticky;top:90px}.filtros-ampliados h3{margin:0 0 20px;padding-bottom:17px;border-bottom:1px solid var(--border);font-size:16px}.filtros-ampliados label{display:block;color:#9ba7b7;font-size:12px;font-weight:700;margin:0 0 17px}.filtros-ampliados input,.filtros-ampliados select{display:block;width:100%;margin-top:7px;padding:11px 12px;border:1px solid var(--border);border-radius:8px;background:#0d1218;color:var(--text);outline:none}.filtros-ampliados input:focus,.filtros-ampliados select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(67,166,255,.1)}.opcoes-termos{border:0;padding:0;margin:0 0 18px}.opcoes-termos legend{color:#9ba7b7;font-size:12px;font-weight:700;margin-bottom:8px}.opcoes-termos label{display:flex;align-items:center;gap:7px;margin:8px 0;font-weight:400}.opcoes-termos input{display:inline;width:auto;margin:0;accent-color:var(--accent)}.filtro-acoes{display:grid;gap:8px}.filtro-acoes button{padding:11px;border-radius:8px;font-weight:700}.btn-aplicar{border:0;background:var(--accent);color:#07121d}.btn-limpar{border:1px solid var(--border);background:transparent;color:var(--text)}
+  .resultados-wrap .toolbar{background:#111720;border:1px solid var(--border);border-radius:11px;padding:10px;margin-bottom:12px}.resultados-wrap #busca{width:100%;height:46px;background:transparent;border:0;box-shadow:none}.resultados-wrap #filtroCategoria{display:none}.resultados-wrap #contador{background:#141a22;border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin:0 0 12px}.resultados-wrap #lista{display:grid;grid-template-columns:1fr 1fr;gap:12px}.resultados-wrap .card{margin:0;min-width:0;padding:20px}.card-titulo{font-size:16px}.card-sintoma{line-height:1.55;margin-top:8px}.badge{border-radius:5px}.vazio{grid-column:1/-1;border:1px dashed var(--border);border-radius:10px}.btn-filtros-mobile{display:none;padding:9px 12px;border:1px solid var(--border);border-radius:8px;background:transparent;color:var(--text)}
+  @media(max-width:900px){.aviso,.area-conteudo{margin-left:15px;margin-right:15px}.painel-pesquisa{grid-template-columns:1fr}.filtros-ampliados{display:none;position:fixed;inset:72px 0 0;z-index:19;border-radius:0;overflow:auto}.filtros-ampliados.aberto{display:block}.btn-filtros-mobile{display:block}.resultados-wrap #lista{grid-template-columns:1fr}.linha-2{flex-direction:column}.topo{padding:0 15px}.sub{display:none}}
+  /* Cards informativos inspirados na referência */
+  .resultados-wrap #lista{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  .resultados-wrap .card{position:relative;overflow:hidden;min-height:300px;padding:23px 20px 18px;text-align:center;display:flex;flex-direction:column;cursor:default;background:linear-gradient(155deg,#171e27,#11161d);border-color:#27323f}
+  .resultados-wrap .card:before{content:attr(data-numero);position:absolute;top:8px;left:10px;color:rgba(255,255,255,.035);font-size:58px;font-weight:300;line-height:1;letter-spacing:-.08em}
+  .card-faixa{position:absolute;right:0;top:13px;width:25px;height:4px;background:var(--cor-card);box-shadow:0 0 15px var(--cor-card)}
+  .card-icone{width:61px;height:61px;margin:7px auto 17px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--cor-card) 45%,var(--border));border-radius:50%;color:var(--cor-card);background:color-mix(in srgb,var(--cor-card) 8%,transparent);font-size:27px;position:relative;z-index:1}
+  .card-header{display:block}.card-titulo{font-size:15px;line-height:1.35;margin:0 0 9px}.card-sintoma{font-size:12px;line-height:1.55;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:56px}.badge{display:inline-block;margin-top:12px;color:var(--cor-card);background:color-mix(in srgb,var(--cor-card) 10%,transparent)}
+  .btn-ver-solucao{margin:auto auto 0;width:100%;padding:10px 12px;border:0;border-radius:7px;background:var(--cor-card);color:#071018;font-size:12px;font-weight:800}.btn-ver-solucao:hover{filter:brightness(1.12);box-shadow:0 8px 22px color-mix(in srgb,var(--cor-card) 22%,transparent)}
+  .card-detalhe{text-align:left;width:100%}.card.aberto{grid-column:span 2;min-height:auto}.card.aberto .card-sintoma{-webkit-line-clamp:unset;min-height:0}.card.aberto .btn-ver-solucao{margin-top:18px}.card.aberto .card-detalhe{max-height:1200px}.card-fechar-texto{display:none}.card.aberto .card-abrir-texto{display:none}.card.aberto .card-fechar-texto{display:inline}
+  @media(max-width:1100px){.resultados-wrap #lista{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:900px){.resultados-wrap #lista{grid-template-columns:1fr}.card.aberto{grid-column:auto}}
+  /* Cadastro simplificado */
+  #painelForm{display:none;position:fixed;inset:0;z-index:50;max-width:none!important;max-height:none!important;margin:0!important;padding:24px!important;background:rgba(3,7,12,.78)!important;backdrop-filter:blur(7px);overflow:auto;opacity:1}
+  #painelForm.aberto{display:block}.form-modal{width:min(760px,100%);margin:25px auto;background:#11161d;border:1px solid var(--border);border-radius:15px;box-shadow:0 30px 90px rgba(0,0,0,.6);overflow:hidden}.form-topo{display:flex;align-items:start;justify-content:space-between;padding:23px 25px;border-bottom:1px solid var(--border)}.form-topo h2{font-size:21px!important;margin:3px 0 0!important}.form-kicker{color:var(--accent);font-size:10px;font-weight:800;letter-spacing:.13em}.btn-fechar-form{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:#0d1218;color:var(--text);font-size:22px}.form-corpo{padding:23px 25px}.form-etapa{background:#0e131a;border:1px solid var(--border);border-radius:11px;padding:18px;margin-bottom:14px}.form-etapa-titulo{display:flex;gap:11px;align-items:center;margin-bottom:16px}.form-etapa-numero{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:var(--accent);color:#07121d;font-size:11px;font-weight:900}.form-etapa-titulo strong{display:block;font-size:14px}.form-etapa-titulo small,.ajuda-campo{display:block;color:var(--text-muted);font-size:11px;font-weight:400;margin-top:3px}.obrigatorio{color:#ff7188}.campo-form textarea#fSolucao{min-height:125px}.detalhes-avancados{border:1px solid var(--border);border-radius:10px;margin-bottom:14px;background:#0e131a}.detalhes-avancados summary{padding:15px 18px;cursor:pointer;color:var(--accent);font-size:13px;font-weight:700}.detalhes-avancados>div{padding:0 18px 17px}.tags-linha{display:flex;gap:8px}.tags-linha input{flex:1}.btn-gerar-tags{border:1px solid var(--border);border-radius:8px;background:#18212b;color:var(--accent);font-size:12px;font-weight:700;white-space:nowrap;padding:0 13px}.acoes-form-fixas{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 25px;border-top:1px solid var(--border);background:#0d1218}.acoes-form-fixas .linha-botoes{margin-left:auto}.linha-pasta-simples{font-size:11px;color:var(--text-muted)}.erro-form{margin:0 0 13px;padding:10px 12px;border-radius:7px;background:rgba(224,90,90,.1)}
+  @media(max-width:650px){#painelForm{padding:0!important}.form-modal{margin:0;min-height:100vh;border-radius:0}.form-corpo,.form-topo,.acoes-form-fixas{padding-left:16px;padding-right:16px}.tags-linha{flex-direction:column}.btn-gerar-tags{padding:10px}.acoes-form-fixas{align-items:stretch;flex-direction:column}.acoes-form-fixas .linha-botoes{width:100%;margin:0;display:grid}.acoes-form-fixas button{width:100%}}
+  .atalhos-categoria{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:-5px 0 18px}.atalho-categoria{display:flex;align-items:center;gap:7px;min-height:37px;padding:8px;border:1px solid var(--border);border-radius:7px;background:#0d1218;color:var(--text-muted);font-size:11px;text-align:left}.atalho-categoria:hover{border-color:var(--accent);color:var(--text)}.atalho-categoria.ativo{border-color:var(--accent);background:var(--accent-bg);color:var(--accent);box-shadow:0 0 0 2px rgba(67,166,255,.08)}.atalho-categoria span{font-size:15px;width:18px;text-align:center}.label-atalhos{display:block;color:#9ba7b7;font-size:11px;font-weight:700;margin:0 0 9px}
+  .card-imagem{height:92px;margin:2px auto 14px;display:grid;place-items:center;color:var(--cor-card);position:relative;z-index:1}.card-imagem:after{content:'';position:absolute;width:90px;height:55px;border-radius:50%;background:var(--cor-card);opacity:.07;filter:blur(10px)}.card-imagem svg{width:92px;height:82px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;position:relative;z-index:1}.card-imagem .preenchimento{fill:currentColor;opacity:.11;stroke:none}
+  .resultados-wrap .card{cursor:pointer}.card-causa-label{display:block;margin:10px 0 4px;color:var(--cor-card);font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.btn-ver-solucao{pointer-events:none}
+  .janela-detalhes{width:min(760px,calc(100% - 28px));max-height:88vh;padding:0;border:1px solid var(--border);border-radius:15px;background:#11161d;color:var(--text);box-shadow:0 35px 100px rgba(0,0,0,.7);overflow:hidden}.janela-detalhes::backdrop{background:rgba(2,5,9,.78);backdrop-…4057 tokens truncated…talhes').addEventListener('click', () => janelaDetalhes.close());
+    janelaDetalhes.showModal();
+  }
+  janelaDetalhes.addEventListener('click', event => { if (event.target === janelaDetalhes) janelaDetalhes.close(); });
+
+  function renderizar() {
+    const termo = normaliza(elBusca.value.trim());
+    const palavraExtra = normaliza((document.getElementById('filtroPalavra') || {}).value || '');
+    const campoBusca = (document.getElementById('filtroCampo') || {}).value || 'todos';
+    const modoBusca = (document.querySelector('input[name="modoBusca"]:checked') || {}).value || 'todos';
+    const ordem = (document.getElementById('filtroOrdem') || {}).value || 'relevancia';
+    const categoriaSelecionada = elFiltro.value;
+    document.querySelectorAll('.atalho-categoria').forEach(btn => btn.classList.toggle('ativo', btn.dataset.categoria === categoriaSelecionada));
+
+    const filtrados = dados.filter(item => {
+      const bateCategoria = !categoriaSelecionada || item.categoria === categoriaSelecionada;
+      if (!bateCategoria) return false;
+      const alvoLivre = normaliza([item.categoria, item.problema, item.sintoma, item.solucao, item.tags].join(' '));
+      if (termo && !alvoLivre.includes(termo)) return false;
+      if (!palavraExtra) return true;
+      const alvoFiltro = campoBusca === 'todos' ? alvoLivre : normaliza(item[campoBusca]);
+      const termos = palavraExtra.split(/\s+/).filter(Boolean);
+      return modoBusca === 'todos' ? termos.every(t => alvoFiltro.includes(t)) : termos.some(t => alvoFiltro.includes(t));
+    });
+
+    if (ordem === 'az') filtrados.sort((a,b) => a.problema.localeCompare(b.problema));
+    if (ordem === 'categoria') filtrados.sort((a,b) => a.categoria.localeCompare(b.categoria));
+
+    elContador.textContent = filtrados.length + ' resultado(s)';
+
+    if (filtrados.length === 0) {
+      elLista.innerHTML = '<div class="vazio">Nenhum problema encontrado. Tente outra palavra-chave.</div>';
+      return;
+    }
+
+    const desenhosCategoria = {
+      caixas:'<rect class="preenchimento" x="15" y="24" width="70" height="45" rx="5"/><rect x="15" y="24" width="70" height="45" rx="5"/><path d="M22 33h30v17H22zM60 34h17M60 42h17M25 59h7M38 59h7M51 59h7M64 59h7"/><path d="M31 24v-8h36v8"/>',
+      trocas:'<path class="preenchimento" d="M20 34h52l-10-10 8-8 24 23-24 23-8-8 10-10H20z"/><path d="M15 32h57l-10-10M85 52H28l10 10M72 22l13 12-13 12M28 62L15 50l13-12"/>',
+      'sistemas web':'<rect class="preenchimento" x="12" y="17" width="76" height="54" rx="5"/><rect x="12" y="17" width="76" height="54" rx="5"/><path d="M12 29h76M20 23h1M27 23h1M34 23h1M30 79h40M50 71v8"/><circle cx="50" cy="49" r="13"/><path d="M37 49h26M50 36c7 7 7 19 0 26M50 36c-7 7-7 19 0 26"/>',
+      deposito:'<path class="preenchimento" d="M11 37l39-21 39 21v40H11z"/><path d="M11 37l39-21 39 21M16 34v43h68V34M25 77V45h50v32M25 56h50M25 67h50"/><path d="M40 45v32M60 45v32"/>',
+      impressoras:'<rect class="preenchimento" x="18" y="34" width="64" height="35" rx="5"/><path d="M28 35V14h44v21M27 64H18V39c0-3 3-5 6-5h52c3 0 6 2 6 5v25H72M28 55h44v31H28zM35 64h30M35 72h24"/><circle cx="72" cy="43" r="2"/>',
+      rfid:'<rect class="preenchimento" x="19" y="22" width="42" height="57" rx="5"/><rect x="19" y="22" width="42" height="57" rx="5"/><circle cx="40" cy="42" r="8"/><path d="M68 33c9 7 9 27 0 34M76 25c14 13 14 37 0 50M84 18c19 18 19 46 0 64M31 68h18"/>',
+      mobile:'<rect class="preenchimento" x="29" y="9" width="42" height="82" rx="7"/><rect x="29" y="9" width="42" height="82" rx="7"/><path d="M37 19h26M37 78h26"/><circle cx="50" cy="85" r="2"/><path d="M41 48l6 6 13-15"/>',
+      permissoes:'<circle class="preenchimento" cx="43" cy="35" r="15"/><circle cx="43" cy="35" r="15"/><path d="M16 78c3-17 13-27 27-27 9 0 16 4 21 11M70 54l17 7v12c0 9-7 15-17 19-10-4-17-10-17-19V61zM63 72l5 5 10-12"/>',
+      impressora:'<path d="M28 35V14h44v21M18 64V39c0-3 3-5 6-5h52c3 0 6 2 6 5v25M28 55h44v31H28zM35 64h30M35 72h24"/>',
+      rede:'<circle cx="50" cy="48" r="31"/><path d="M19 48h62M50 17c17 17 17 45 0 62M50 17c-17 17-17 45 0 62M28 29h44M28 67h44"/>'
+    };
+    const coresCard = ['#43a6ff','#43dfa0','#ffd34d','#a778ff','#ff6680','#ff765f'];
+    elLista.innerHTML = filtrados.map((item, i) => {
+      const categoriaNormalizada = normaliza(item.categoria);
+      const desenho = desenhosCategoria[categoriaNormalizada] || '<circle cx="50" cy="50" r="31"/><path d="M38 40c2-8 8-12 16-12 10 0 17 6 17 15 0 13-16 13-16 24M55 78h.1"/>';
+      const cor = coresCard[i % coresCard.length];
+      return `
+      <article class="card" data-idx="${i}" data-numero="${String(i + 1).padStart(2,'0')}" style="--cor-card:${cor}">
+        <span class="card-faixa" aria-hidden="true"></span>
+        <div class="card-imagem" aria-hidden="true"><svg viewBox="0 0 100 100">${desenho}</svg></div>
+        <div class="card-header">
+          <div>
+            <p class="card-titulo">${item.problema}</p>
+            <span class="card-causa-label">O que pode causar esse problema?</span>
+            <p class="card-sintoma">${item.sintoma}</p>
+            <div class="card-preview-tags">${(item.tags || '').split(/\s+/).filter(Boolean).slice(0,3).map(tag => `<span class="card-preview-tag">${tag}</span>`).join('')}</div>
+          </div>
+          <span class="badge">${item.categoria}</span>
+        </div>
+        <button class="btn-ver-solucao" type="button">Ver todas as informações</button>
+        <div class="card-detalhe">
+          <div class="card-detalhe-inner">
+          <div class="campo">
+            <div class="campo-label">Solução</div>
+            <div class="campo-valor">${item.solucao}</div>
+          </div>
+          ${item.comando ? `
+          <div class="campo">
+            <div class="campo-label">Comando / macro</div>
+            <div class="campo-valor mono">${item.comando}</div>
+          </div>` : ''}
+          ${item.observacao ? `
+          <div class="campo">
+            <div class="campo-label">Observação</div>
+            <div class="campo-valor">${item.observacao}</div>
+          </div>` : ''}
+          ${item.tags ? `
+          <div class="tags">${item.tags.split(' ').filter(Boolean).map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
+          </div>
+        </div>
+      </article>
+    `}).join('');
+
+    elLista.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('click', () => abrirDetalhes(filtrados[Number(card.dataset.idx)]));
+    });
+  }
+
+  elBusca.addEventListener('input', renderizar);
+  elFiltro.addEventListener('change', renderizar);
+  document.getElementById('btnAplicarFiltros').addEventListener('click', () => { renderizar(); document.getElementById('painelFiltros').classList.remove('aberto'); });
+  document.getElementById('btnLimparFiltros').addEventListener('click', () => { elBusca.value=''; elFiltro.value=''; document.getElementById('filtroPalavra').value=''; document.getElementById('filtroCampo').value='todos'; document.getElementById('filtroOrdem').value='az'; renderizar(); });
+  document.getElementById('btnFiltrosMobile').addEventListener('click', () => document.getElementById('painelFiltros').classList.toggle('aberto'));
+  renderizar();
+
+  const btnAbrirForm = document.getElementById('btnAbrirForm');
+  const painelForm = document.getElementById('painelForm');
+  // Organiza o formulario existente em uma janela guiada, sem alterar os dados salvos.
+  const formModal = document.createElement('div');
+  formModal.className = 'form-modal';
+  const formTopo = document.createElement('div');
+  formTopo.className = 'form-topo';
+  formTopo.innerHTML = '<div><span class="form-kicker">BASE DE CONHECIMENTO</span><h2>Registrar novo problema</h2></div><button class="btn-fechar-form" id="btnFecharForm" type="button" aria-label="Fechar">×</button>';
+  const formCorpo = document.createElement('div');
+  formCorpo.className = 'form-corpo';
+  [...painelForm.children].forEach(el => { if (el.tagName !== 'H2' && !el.classList.contains('linha-botoes') && !el.classList.contains('aviso-form')) formCorpo.appendChild(el); });
+  const acoesOriginais = painelForm.querySelector('.linha-botoes');
+  const avisoOriginal = painelForm.querySelector('.aviso-form');
+  const formAcoes = document.createElement('div');
+  formAcoes.className = 'acoes-form-fixas';
+  formAcoes.innerHTML = '<span class="linha-pasta-simples">* Preencha categoria, título, sintoma e solução</span>';
+  formAcoes.appendChild(acoesOriginais);
+  formCorpo.appendChild(avisoOriginal);
+  painelForm.append(formModal);
+  formModal.append(formTopo, formCorpo, formAcoes);
+  const camposPrincipais = [document.getElementById('fCategoria').closest('.linha-2'), document.getElementById('fSintoma').closest('.campo-form')];
+  const etapaUm = document.createElement('section'); etapaUm.className = 'form-etapa'; etapaUm.innerHTML = '<div class="form-etapa-titulo"><span class="form-etapa-numero">1</span><div><strong>Identifique o problema</strong><small>Escolha a categoria, escreva um título curto e descreva o que acontece.</small></div></div>';
+  camposPrincipais.forEach(el => etapaUm.appendChild(el));
+  const etapaDois = document.createElement('section'); etapaDois.className = 'form-etapa'; etapaDois.innerHTML = '<div class="form-etapa-titulo"><span class="form-etapa-numero">2</span><div><strong>Informe a solução</strong><small>Escreva os passos na ordem em que devem ser executados.</small></div></div>';
+  etapaDois.appendChild(document.getElementById('fSolucao').closest('.campo-form'));
+  const etapaTres = document.createElement('section'); etapaTres.className = 'form-etapa'; etapaTres.innerHTML = '<div class="form-etapa-titulo"><span class="form-etapa-numero">3</span><div><strong>Facilite a pesquisa</strong><small>As palavras-chave podem ser geradas automaticamente.</small></div></div>';
+  const campoTags = document.getElementById('fTags').closest('.campo-form');
+  const tagsLinha = document.createElement('div'); tagsLinha.className = 'tags-linha';
+  campoTags.insertBefore(tagsLinha, document.getElementById('fTags')); tagsLinha.appendChild(document.getElementById('fTags'));
+  tagsLinha.insertAdjacentHTML('beforeend','<button class="btn-gerar-tags" id="btnGerarTags" type="button">Gerar automaticamente</button>'); etapaTres.appendChild(campoTags);
+  const detalhes = document.createElement('details'); detalhes.className = 'detalhes-avancados'; detalhes.innerHTML = '<summary>+ Informações opcionais</summary><div></div>';
+  detalhes.querySelector('div').append(document.getElementById('fComando').closest('.campo-form'),document.getElementById('fObservacao').closest('.campo-form'));
+  const referencia = formCorpo.querySelector('.linha-pasta'); formCorpo.insertBefore(etapaUm, referencia); formCorpo.insertBefore(etapaDois, referencia); formCorpo.insertBefore(etapaTres, referencia); formCorpo.insertBefore(detalhes, referencia);
+  document.getElementById('btnFecharForm').addEventListener('click',()=>{painelForm.classList.remove('aberto');btnAbrirForm.textContent='+ Novo problema';});
+  function gerarTagsAutomaticas(){const comuns=new Set(['para','com','uma','que','nao','não','dos','das','problema','usuario','usuário']);const texto=normaliza(document.getElementById('fProblema').value+' '+document.getElementById('fSintoma').value);const tags=[...new Set(texto.replace(/[^a-z0-9\s]/g,' ').split(/\s+/).filter(p=>p.length>3&&!comuns.has(p)))].slice(0,7);document.getElementById('fTags').value=tags.join(' ');}
+  document.getElementById('btnGerarTags').addEventListener('click',gerarTagsAutomaticas);
+  document.querySelector('label[for="fSintoma"]').innerHTML = 'O que pode causar esse problema? <span class="obrigatorio">*</span>';
+  const listaCategoriasCadastro = document.createElement('datalist');
+  listaCategoriasCadastro.id = 'categoriasCadastro';
+  listaCategoriasCadastro.innerHTML = categorias.map(c => `<option value="${c}"></option>`).join('');
+  document.body.appendChild(listaCategoriasCadastro);
+  document.getElementById('fCategoria').setAttribute('list','categoriasCadastro');
+  const erroForm = document.getElementById('erroForm');
+  const btnSalvar = document.getElementById('btnSalvar');
+
+  const listaPendentesEl = document.getElementById('listaPendentes');
+  const btnAdicionarLista = document.getElementById('btnAdicionarLista');
+  let pendentes = [];
+
+  const camposForm = ['fCategoria','fProblema','fSintoma','fSolucao','fComando','fObservacao','fTags'];
+
+  function lerFormulario() {
+    if (!document.getElementById('fTags').value.trim() && (document.getElementById('fProblema').value.trim() || document.getElementById('fSintoma').value.trim())) gerarTagsAutomaticas();
+    return {
+      categoria: document.getElementById('fCategoria').value.trim(),
+      problema: document.getElementById('fProblema').value.trim(),
+      sintoma: document.getElementById('fSintoma').value.trim(),
+      solucao: document.getElementById('fSolucao').value.trim(),
+      comando: document.getElementById('fComando').value.trim(),
+      observacao: document.getElementById('fObservacao').value.trim(),
+      tags: document.getElementById('fTags').value.trim()
+    };
+  }
+
+  function limparFormulario() {
+    camposForm.forEach(id => { document.getElementById(id).value = ''; });
+  }
+
+  function validaCamposObrigatorios(item) {
+    return item.categoria && item.problema && item.sintoma && item.solucao;
+  }
+
+  function renderizarPendentes() {
+    if (pendentes.length === 0) {
+      listaPendentesEl.innerHTML = '';
+      return;
+    }
+    const contador = `<div class="contador-pendentes">${pendentes.length} item(ns) prontos para salvar</div>`;
+    const itens = pendentes.map((item, i) => `
+      <div class="item-pendente">
+        <span><span class="item-pendente-titulo">${item.problema}</span> <span class="item-pendente-cat">- ${item.categoria}</span></span>
+        <button type="button" class="btn-remover-pendente" data-remover="${i}" aria-label="Remover item">✕</button>
+      </div>
+    `).join('');
+    listaPendentesEl.innerHTML = contador + itens;
+
+    listaPendentesEl.querySelectorAll('.btn-remover-pendente').forEach(btn => {
+      btn.addEventListener('click', () => {
+        pendentes.splice(Number(btn.dataset.remover), 1);
+        renderizarPendentes();
+      });
+    });
+  }
+
+  btnAdicionarLista.addEventListener('click', () => {
+    const item = lerFormulario();
+    if (!validaCamposObrigatorios(item)) {
+      erroForm.textContent = 'Preencha ao menos categoria, título, causa do problema e solução antes de adicionar.';
+      erroForm.classList.add('mostrar');
+      return;
+    }
+    erroForm.classList.remove('mostrar');
+    pendentes.push(item);
+    limparFormulario();
+    renderizarPendentes();
+    document.getElementById('fCategoria').focus();
+  });
+
+  btnAbrirForm.addEventListener('click', () => {
+    painelForm.classList.toggle('aberto');
+    btnAbrirForm.textContent = painelForm.classList.contains('aberto') ? 'Fechar' : '+ Novo problema';
+  });
+
+  function escapaJs(txt) {
+    return (txt || '').replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+  }
+
+  function gerarArquivoDados(listaCompleta) {
+    const blocos = listaCompleta.map(item => `  {
+    categoria: \`${escapaJs(item.categoria)}\`,
+    problema: \`${escapaJs(item.problema)}\`,
+    sintoma: \`${escapaJs(item.sintoma)}\`,
+    solucao: \`${escapaJs(item.solucao)}\`,
+    comando: \`${escapaJs(item.comando)}\`,
+    observacao: \`${escapaJs(item.observacao)}\`,
+    tags: \`${escapaJs(item.tags)}\`
+  }`).join(',\n');
+
+    return `// ============================================================
+// BASE DE CONHECIMENTO - HELPDESK
+// ============================================================
+// Para adicionar um problema pelo formulario da pagina, use o
+// botao "Novo problema" e depois "Salvar dados.js".
+// Este arquivo foi gerado automaticamente - pode editar na mao
+// tambem se preferir.
+// ============================================================
+
+const dados = [
+${blocos}
+];
+`;
+  }
+
+  const btnPasta = document.getElementById('btnPasta');
+  const statusPasta = document.getElementById('statusPasta');
+  const avisoSalvar = document.getElementById('avisoSalvar');
+  let pastaSelecionada = null;
+  const suportaPasta = 'showDirectoryPicker' in window;
+
+  if (!suportaPasta) {
+    btnPasta.disabled = true;
+    btnPasta.textContent = 'Indisponivel neste navegador';
+    statusPasta.textContent = 'Use Chrome ou Edge para salvar direto na pasta. Aqui vai baixar em Downloads.';
+  }
+
+  btnPasta.addEventListener('click', async () => {
+    try {
+      pastaSelecionada = await window.showDirectoryPicker();
+      statusPasta.textContent = 'Pasta selecionada: ' + pastaSelecionada.name + ' - salvando direto ali';
+      avisoSalvar.textContent = 'Vai sobrescrever o dados.js dentro de "' + pastaSelecionada.name + '" direto, sem baixar.';
+      btnSalvar.textContent = 'Salvar dados.js na pasta';
+    } catch (e) {
+      // usuario cancelou a selecao
+    }
+  });
+
+  async function salvarNaPasta(conteudo) {
+    const permissao = await pastaSelecionada.requestPermission({ mode: 'readwrite' });
+    if (permissao !== 'granted') {
+      throw new Error('Permissao de escrita negada.');
+    }
+    const handleArquivo = await pastaSelecionada.getFileHandle('dados.js', { create: true });
+    const writable = await handleArquivo.createWritable();
+    await writable.write(conteudo);
+    await writable.close();
+  }
+
+  function baixarArquivo(conteudo) {
+    const blob = new Blob([conteudo], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'dados.js';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  btnSalvar.addEventListener('click', async () => {
+    const itemAtual = lerFormulario();
+    const formPreenchido = itemAtual.categoria || itemAtual.problema || itemAtual.sintoma || itemAtual.solucao;
+
+    let novosItens = [...pendentes];
+
+    if (formPreenchido) {
+      if (!validaCamposObrigatorios(itemAtual)) {
+        erroForm.textContent = 'O formulário está incompleto. Preencha categoria, título, causa do problema e solução, ou limpe os campos antes de salvar.';
+        erroForm.classList.add('mostrar');
+        return;
+      }
+      novosItens.push(itemAtual);
+    }
+
+    if (novosItens.length === 0) {
+      erroForm.textContent = 'Adicione pelo menos um problema antes de salvar.';
+      erroForm.classList.add('mostrar');
+      return;
+    }
+
+    erroForm.classList.remove('mostrar');
+
+    const listaAtualizada = [...dados, ...novosItens];
+    const conteudo = gerarArquivoDados(listaAtualizada);
+
+    try {
+      if (pastaSelecionada) {
+        await salvarNaPasta(conteudo);
+      } else {
+        baixarArquivo(conteudo);
+      }
+    } catch (e) {
+      erroForm.textContent = 'Não foi possível salvar na pasta: ' + e.message;
+      erroForm.classList.add('mostrar');
+      return;
+    }
+
+    ['fCategoria','fProblema','fSintoma','fSolucao','fComando','fObservacao','fTags'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    pendentes = [];
+    renderizarPendentes();
+    painelForm.classList.remove('aberto');
+    btnAbrirForm.textContent = '+ Novo problema';
+  });
+</script>
+</body>
+</html>
